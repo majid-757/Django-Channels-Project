@@ -4,7 +4,7 @@ from django.shortcuts import render, HttpResponse
 
 def index(request):
 
-    return HttpResponse('hello django')
+    return render(request, 'echo/index.html')
 
 
 
