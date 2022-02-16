@@ -1,4 +1,4 @@
-from channels.generic.websocket import WebsocketConsumer, AsyncWebSocketConsumer
+from channels.generic.websocket import WebsocketConsumer, AsyncWebSocketConsumer, AsyncJsonWebsocketConsumer
 from asgiref.sync import async_to_sync
 import json
 
@@ -25,7 +25,6 @@ class EchoConsumer(WebsocketConsumer):
 
 
 class ChatConsumer(AsyncWebSocketConsumer):
-
     async def connect(self):
         self.user_id = self.scope['url_route']['kwargs']['username']
         self.group_name = f"chat_{self.user_id}"
@@ -35,7 +34,6 @@ class ChatConsumer(AsyncWebSocketConsumer):
             self.channel_name
         )
         await self.accept()
-
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
@@ -71,13 +69,19 @@ class ChatConsumer(AsyncWebSocketConsumer):
 
 
  
+class TestConsumer(AsyncJsonWebsocketConsumer):
+
+    async def connect(self):
+        
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        
+        pass 
 
 
-
-
-
-
-
+    async def receive_json(self, content):
+        await self.send_json(content)
 
 
 
