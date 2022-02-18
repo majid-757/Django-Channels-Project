@@ -1,5 +1,7 @@
 from django.shortcuts import render, HttpResponse
 from django.utils.safestring import mark_safe 
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 import json
 
 
@@ -18,8 +20,25 @@ def join_chat(request, username):
 
 
 
+def new_message(request, username):
+
+    receiver = request.GET['receiver']
+
+    text = request.GET['text']
+    channel_layer = get_channel_layer()
+    group_name = f"chat_{receiver}"
+    async_to_sync(channel_layer.group_send)(
+        group_name, 
+        {
+            'type': 'chat_message',
+            'message': json.dumps()
+        }
+    )
 
 
+
+
+    return render()
 
 
 
