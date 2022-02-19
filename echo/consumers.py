@@ -9,15 +9,19 @@ class EchoConsumer(WebsocketConsumer):
 
     def connect(self):
         self.room_id = "echo_1"
+        self.user = self.scope['user']
 
-        async_to_sync(self.channel_layer.group_add)(
-            self.room_id,
-            self.channel_name
-        )
-        
-        self.accept()
+        if self.user.is_authenticated:
+            
+            async_to_sync(self.channel_layer.group_add)(
+                self.room_id,
+                self.channel_name
+            )
+            
+            self.accept()
 
-
+        else:
+            self.close()
 
     def disconnect(self, close_code):
 
