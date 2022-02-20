@@ -10,6 +10,11 @@ class EchoConsumer(WebsocketConsumer):
     def connect(self):
         self.room_id = "echo_1"
         self.user = self.scope['user']
+        username = self.user.username
+
+        self.scope['session']['test'] = 1
+        self.scope['session']['test2'] = username
+        self.scope['session'].save()
 
         if self.user.is_authenticated:
             
