@@ -3,6 +3,7 @@ from channels.consumer import SyncConsumer, AsyncConsumer
 from channels.exceptions import StopConsumer
 from asgiref.sync import async_to_sync
 import json
+import urllib.parse as urlparse
 
 
 class EchoConsumer(WebsocketConsumer):
@@ -16,6 +17,10 @@ class EchoConsumer(WebsocketConsumer):
         self.scope['session']['test2'] = username
         self.scope['session'].save()
 
+        query = self.scope['query_string']
+        params = urlparse.parse_qs(query.decode('UTF-8'))
+
+        print(params)
         if self.user.is_authenticated:
             
             async_to_sync(self.channel_layer.group_add)(
