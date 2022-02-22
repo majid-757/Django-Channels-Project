@@ -12,7 +12,7 @@
     <script>
         var socket = new WebSocket(
             'ws://' + window.location.host +
-            '/ws/?name=test&version=1');
+            '/ws/?name=test&version=2');
 
         socket.onmessage = function(e) {
             var message = e.data;

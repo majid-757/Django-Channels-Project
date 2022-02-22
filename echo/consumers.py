@@ -20,7 +20,11 @@ class EchoConsumer(WebsocketConsumer):
         query = self.scope['query_string']
         params = urlparse.parse_qs(query.decode('UTF-8'))
 
-        print(params)
+        name = params.get('name', [None])[0]
+        version = params.get('version',[None])[0]
+
+        print(name, version)
+
         if self.user.is_authenticated:
             
             async_to_sync(self.channel_layer.group_add)(
