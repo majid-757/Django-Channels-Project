@@ -39,10 +39,13 @@ def index(request):
 
 
 
-
-
-
-
+@login_required
+def create_chat(request):
+    current_user = request.user
+    title = request.POST['group_name']
+    chat = GroupChat.objects.create(creator_id=current_user.id, title=title)
+    Member.objects.create(chat_id=chat.id, user_id=current_user.id)
+    return redirect(reverse('chat:chat', args=[chat.unique_code]))
 
 
 
