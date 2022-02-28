@@ -49,3 +49,24 @@ def create_chat(request):
 
 
 
+
+@login_required
+def chat(request, chat_id):
+    current_user = request.user
+    try:
+        chat = GroupChat.objects.get(unique_code=chat_id)
+    except GroupChat.DoesNotExist:
+        return render(request, 'chat/404.html',)
+
+    if request.method == 'GET':
+        if Member.objects.filter(chat_id=chat_id, user_id=current_user.id).count() == 0:
+            return render(request, 'chat/join_chat.html', {'chatObject': chat})
+        
+        return render(request, 'chat/chat.html', {'chatObject': chat, 'chat_id_json': mark_safe(json.dumps(chat.unique_code))})
+
+    elif request.method == 'POST':
+        Member.objects.create(chat_id=chat.id, user_id=current_user.id)
+
+        return render(request, 'chat/chat.html', {'chatObject': chat, 'chat_id_json': mark_safe(json.dumps(chat.unique_code))})
+
+
