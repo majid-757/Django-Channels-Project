@@ -70,3 +70,22 @@ def chat(request, chat_id):
         return render(request, 'chat/chat.html', {'chatObject': chat, 'chat_id_json': mark_safe(json.dumps(chat.unique_code))})
 
 
+
+
+
+@login_required
+def leave_chat(request, chat_id):
+    current_user = request.user
+    try:
+        chat = GroupChat.objects.get(unique_code=chat_id)
+    except GroupChat.DoesNotExist:
+        return render(request, 'chat/404.html')
+
+    if chat.creator_id == current_user.id:
+        chat.delete()
+
+    else:
+        Member.objects.filter(chat_id=chat.id, user_id=current_user.id).delete()
+
+    return redirect('chat:index')
+
