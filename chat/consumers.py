@@ -50,7 +50,7 @@ class ChatConsumer(AsyncConsumer):
                 self.chat_room_id,
                 {
                     'type': 'chat_message',
-                    'message': json.dumps({'sender': self.user.username, 'text': text})
+                    'message': json.dumps({'type':"msg", 'sender': self.user.username, 'text': text})
                 }
             )
             

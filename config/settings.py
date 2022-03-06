@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
 
     'echo',
+    'chat',
 ]
 
 MIDDLEWARE = [
