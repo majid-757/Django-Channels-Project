@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, HttpResponse, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.utils.safestring import mark_safe
