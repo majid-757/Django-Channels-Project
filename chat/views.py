@@ -17,17 +17,15 @@ def register(request):
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password2')
 
-            user = authenticate(username=username, password=password)
+            user = authenticate(username=username,password=password)
             if user is not None:
                 if user.is_active:
                     login(request, user)
                     return redirect('chat:index')
 
             return redirect('login')
-
     else:
         form = UserRegisterForm()
-
     return render(request, 'chat/register.html', {'form': form})
 
 
@@ -59,7 +57,7 @@ def chat(request, chat_id):
         return render(request, 'chat/404.html',)
 
     if request.method == 'GET':
-        if Member.objects.filter(chat_id=chat_id, user_id=current_user.id).count() == 0:
+        if Member.objects.filter(chat_id=chat.id, user_id=current_user.id).count() == 0:
             return render(request, 'chat/join_chat.html', {'chatObject': chat})
         
         return render(request, 'chat/chat.html', {'chatObject': chat, 'chat_id_json': mark_safe(json.dumps(chat.unique_code))})

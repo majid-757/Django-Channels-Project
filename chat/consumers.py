@@ -11,7 +11,6 @@ class ChatConsumer(AsyncConsumer):
         self.user = self.scope['user']
         self.chat_id = self.scope['url_route']['kwargs']['chat_id']
         self.chat_room_id = f"chat_{self.chat_id}"
-        self.sender.channel_name = self.channel.name
 
         await self.channel_layer.group_add(
             self.chat_room_id,
@@ -51,7 +50,8 @@ class ChatConsumer(AsyncConsumer):
                 self.chat_room_id,
                 {
                     'type': 'chat_message',
-                    'message': json.dumps({'type':"msg", 'sender': self.user.username, 'text': text})
+                    'message': json.dumps({'type':"msg", 'sender': self.user.username, 'text': text}),
+                    'sender_channel_name': self.channel_name
                 }
             )
             
@@ -59,11 +59,12 @@ class ChatConsumer(AsyncConsumer):
     async def chat_message(self, event):
         
         message = event['message']
-        self.channel_name
-        await self.send({
-            'type': 'websocket.send',
-            'text': message
-        })
+
+        if self.channel_name != event['sender_channel_name']:
+            await self.send({
+                'type': 'websocket.send',
+                'text': message
+            })
 
 
 
