@@ -117,3 +117,17 @@ def leave_chat(request, chat_id):
 
     return redirect('chat:index')
 
+
+
+
+
+
+@login_required
+def video_chat(request):
+    current_user = request.user
+    call_logs = VideoThread.objects.filter(Q(caller_id=current_user.id) | Q(callee_id=current_user.id)).order_by('-date_created')[:5]
+    return render(request, 'chat/video_chat.html', {'call_logs': call_logs})
+
+
+
+    
