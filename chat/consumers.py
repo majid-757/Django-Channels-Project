@@ -2,9 +2,13 @@ from channels.consumer import SyncConsumer, AsyncConsumer
 from channels.exceptions import StopConsumer
 from asgiref.sync import async_to_sync
 from channels.db import database_sync_to_async
+from django.db.models import Q
+from django.contrib.auth.models import User
+import asyncio
+from datetime import datetime
 import json
 
-from .models import GroupChat, Message
+from .models import GroupChat, Message, VideoThread
 
 class ChatConsumer(AsyncConsumer):
     
@@ -99,3 +103,23 @@ class ChatConsumer(AsyncConsumer):
 
 
 
+# Video Call Status
+VC_CONTACTING, VC_NOT_AVAILABLE, VC_ACCEPTED, VC_REJECTED, VC_BUSY, VC_PROCESSING, VC_ENDED = \
+    0, 1, 2, 3, 4, 5, 6
+
+class VideoChatConsumer(AsyncConsumer):
+    async def websocket_connect(self, event):
+        self.user = self.scope['user']
+        self.user_room_id = f"videochat_{self.user.id}"
+
+        await self.channel_layer.group_add(
+            self.user_room_id,
+            self.channel_name
+        )
+
+        await self.send({
+            'type': 'websocket.accept'
+        })
+
+
+        
