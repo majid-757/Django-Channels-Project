@@ -152,3 +152,140 @@ class VideoChatConsumer(AsyncConsumer):
 
 
         
+
+
+    async def websocket_receive(self, event):
+        text_data = event.get('text', None)
+        bytes_data = event.get('bytes', None)
+
+        if text_data:
+            text_data_json = json.loads(text_data)
+            message_type = text_data_json['type']
+            
+            if message_type == "createOffer":
+                callee_username = text_data_json['username']
+                status, video_thread_id = await self.create_videothread(callee_username)
+
+                await self.send({
+                    'type': 'websocket.send',
+                    'text': json.dumps({'type': "offerResult", 'status': status, 'video_thread_id': video_thread_id})
+                })
+
+                if status == VC_CONTACTING:
+                    videothread = await self.get_videothread(video_thread_id)
+
+                    await self.channel_layer.group_send(
+                        f"videochat_{videothread.callee.id}",
+                        {
+                            'type': 'chat_message',
+                            'message': json.dumps({'type':"offer", 'username': self.user.username, 'video_thread_id': video_thread_id}),
+                        }
+                    )
+
+            elif message_type == "cancelOffer":
+                video_thread_id = text_data_json['video_thread_id']
+                videothread = await self.get_videothread(video_thread_id)
+                self.scope['session']['video_thread_id'] = None
+                self.scope['session'].save()
+                
+                if videothread.status != VC_ACCEPTED or videothread.status != VC_REJECTED:
+                    await self.change_videothread_status(video_thread_id, VC_NOT_AVAILABLE)
+                    await self.send({
+                        'type': 'websocket.send',
+                        'text': json.dumps({'type': "offerResult", 'status': VC_NOT_AVAILABLE, 'video_thread_id': videothread.id})
+                    })
+                    await self.channel_layer.group_send(
+                        f"videochat_{videothread.callee.id}",
+                        {
+                            'type': 'chat_message',
+                            'message': json.dumps({'type':"offerFinished"}),
+                        }
+                    )
+
+            elif message_type == "acceptOffer":
+                video_thread_id = text_data_json['video_thread_id']
+                videothread = await self.change_videothread_status(video_thread_id, VC_PROCESSING)
+                await self.change_videothread_datetime(video_thread_id, True)
+
+                await self.channel_layer.group_send(
+                    f"videochat_{videothread.caller.id}",
+                    {
+                        'type': 'chat_message',
+                        'message': json.dumps({'type': "offerResult", 'status': VC_ACCEPTED, 'video_thread_id': videothread.id}),
+                    }
+                )
+
+            elif message_type == "rejectOffer":
+                video_thread_id = text_data_json['video_thread_id']
+                videothread = await self.change_videothread_status(video_thread_id, VC_REJECTED)
+                self.scope['session']['video_thread_id'] = None
+                self.scope['session'].save()
+
+                await self.channel_layer.group_send(
+                    f"videochat_{videothread.caller.id}",
+                    {
+                        'type': 'chat_message',
+                        'message': json.dumps({'type': "offerResult", 'status': VC_REJECTED, 'video_thread_id': videothread.id}),
+                    }
+                )
+
+            elif message_type == "hangUp":
+                video_thread_id = text_data_json['video_thread_id']
+                videothread = await self.change_videothread_status(video_thread_id, VC_ENDED)
+                await self.change_videothread_datetime(video_thread_id, False)
+                self.scope['session']['video_thread_id'] = None
+                self.scope['session'].save()
+
+                await self.channel_layer.group_send(
+                    f"videochat_{videothread.caller.id}",
+                    {
+                        'type': 'chat_message',
+                        'message': json.dumps({'type': "offerResult", 'status': VC_ENDED, 'video_thread_id': videothread.id}),
+                    }
+                )
+                await self.channel_layer.group_send(
+                    f"videochat_{videothread.callee.id}",
+                    {
+                        'type': 'chat_message',
+                        'message': json.dumps({'type': "offerResult", 'status': VC_ENDED, 'video_thread_id': videothread.id}),
+                    }
+                )
+            
+            elif message_type == "callerData":
+                video_thread_id = text_data_json['video_thread_id']
+                videothread = await self.get_videothread(video_thread_id)
+            
+                await self.channel_layer.group_send(
+                    f"videochat_{videothread.callee.id}",
+                    {
+                        'type': 'chat_message',
+                        'message': text_data,
+                    }
+                )
+
+            elif message_type == "calleeData":
+                video_thread_id = text_data_json['video_thread_id']
+                videothread = await self.get_videothread(video_thread_id)
+
+                await self.channel_layer.group_send(
+                    f"videochat_{videothread.caller.id}",
+                    {
+                        'type': 'chat_message',
+                        'message': text_data,
+                    }
+                )
+
+    
+    async def chat_message(self, event):
+        message = event['message']
+
+        await self.send({
+            'type': 'websocket.send',
+            'text': message
+        })
+
+
+
+
+
+        
