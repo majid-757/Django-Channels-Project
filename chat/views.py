@@ -130,5 +130,4 @@ def video_chat(request):
 
 
 
-    def home(self):
-        pass
+    
